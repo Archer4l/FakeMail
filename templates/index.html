@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fakemail: mail list</title>
+    <!-- CSS only -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="/">  <img src="/static/logo.svg" width="30" height="30" alt="" loading="lazy"> FakeMail</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse " id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto ">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Action
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-primary dropdown-item" data-toggle="modal" data-target="#deleteall">
+              Empty database
+            </button>
+        </div>
+      </li>
+    </ul>
+    <form action="/search" class="form-inline my-2 my-lg-0" method="POST">
+        <div class="form-group">
+          <input class="form-control mr-sm-2" type="text" placeholder="Search in Subject" aria-label="Search" id="search" name="search" value="{{ request.form['search'] }}">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit"> <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
+                <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
+                </svg> Search </button>
+        </div>
+    </form>
+  </div>
+
+</nav>
+
+<!-- Modal for delete-->
+<div class="modal fade" id="deleteall" tabindex="-1" aria-labelledby="deleteAllLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteAllLabel">Empty database</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          Are you sure you want to empty fakemail database?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+        <a  type="button" class="btn btn-primary" href="/delete_all">Yes</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <table class="table table-striped">
+    <thead >
+    <tr>
+        <td><b>ID</b></td>
+        <td><b>DateTime</b></td>
+        <td><b>FROM</b></td>
+        <td><b>TO</b></td>
+        <td><b>Subject</b></td>
+        <td><b>Action</b></td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for m in mails %}
+    <tr><td>{{ m[0] }}</td><td>{{ m[4] }}</td><td>{{ m[2] }}</td><td>{{ m[3] }}</td><td>{{ m[1] }} {%  if m[5]> 0 %} <span class="d-inline-block" tabindex="0" data-toggle="tooltip" title="contains attachment(s)"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-paperclip" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/></svg></span> {% endif%}</td>
+        <td class="form-inline">
+            <a class="btn btn-primary" target="_blank" href="/raw_mail/{{ m[0] }}"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-down-circle-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v5.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V4.5z"/></svg> RAW </a>	&nbsp;
+            <a class="btn btn-info" target="_blank" href="/email/{{ m[3] }}"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-exclamation-circle-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg> API </a>	&nbsp;
+          <form  method="post">
+            {% if request.form['search'] is defined and request.form['search']|length > 0 %}
+            <input type=hidden id="search" name="search" value="{{ request.form['search'] }}"/>
+            {% endif %}
+            <input type=hidden value="{{ m[0] }}" id="deletemail" name="deletemail"/>
+            <button class="btn btn-danger" ><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-x-circle-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg> Delete </button >
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+    {% if totalpage is defined and curpage is defined  %}
+    <nav aria-label="Page navigation ">
+      <ul class="pagination justify-content-center">
+        <li class="page-item {% if curpage == 1 or totalpage == 0 %} disabled {% endif %}"><a class="page-link" href="/?page=1">First</a></li>
+        <li class="page-item {% if curpage == 1 or totalpage == 0 %} disabled {% endif %}"><a class="page-link" href="/?page={{ curpage - 1 }}">Previous</a></li>
+            {% for i in range(startpage,endpage) %}
+            <li class="page-item {% if totalpage == 1  %} disabled {% elif curpage == i %}active{% endif %}"><a class="page-link" href="/?page={{ i }}">{% if i < 10 %}0{{ i }}{% else %}{{ i }}{% endif %}</a></li>
+            {% endfor %}
+        <li class="page-item {% if totalpage == curpage  %} disabled {% endif %}"><a class="page-link" href="/?page={{ curpage + 1 }}">Next</a></li>
+        <li class="page-item {% if totalpage == curpage  %} disabled {% endif %}"><a class="page-link" href="/?page={{ totalpage }}">End ({{ totalpage }})</a></li>
+      </ul>
+    </nav>
+    {% endif %}
+
+    <script src="/static/js/jquery-3.5.1.slim.min.js"></script>
+    <script src="/static/js/popper.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+
+</body>
+</html>
