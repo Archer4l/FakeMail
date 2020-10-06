@@ -27,7 +27,7 @@ def index():
 
     curpage=1
     offset=0
-    limit=10
+    limit=12
 
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
