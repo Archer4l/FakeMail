@@ -169,4 +169,4 @@ def start_web(host, port):
     app.run(host, port)
 
 if __name__=="__main__":
-    app.run("0.0.0.0", "9080", debug=True)
+    app.run("127.0.0.1", "9080", debug=True)
