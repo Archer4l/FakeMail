@@ -92,6 +92,6 @@ if __name__=='__main__':
         controller = Controller(DataHandler("~/mailbox", 'fake_mail.db', "fake_mail"), hostname='0.0.0.0', port=25)
         controller.start()
 
-        start_web("0.0.0.0", "9080")
+        start_web("127.0.0.1", "9080")
     except KeyboardInterrupt:
         print("smtpd quit!")
