@@ -89,7 +89,7 @@ class DataHandler(object):
 if __name__=='__main__':
 
     try:
-        controller = Controller(DataHandler("~/mailbox", 'fake_mail.db', "fake_mail"), hostname='0.0.0.0', port=25)
+        controller = Controller(DataHandler("~/mailbox", 'fake_mail.db', "fake_mail"), hostname='127.0.0.1', port=25)
         controller.start()
 
         start_web("127.0.0.1", "9080")
