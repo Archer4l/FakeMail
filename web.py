@@ -6,7 +6,7 @@ from flask import Flask, jsonify, redirect, url_for, request
 from flask import render_template
 
 app = Flask(__name__)
-app.config['JSON_AS_ASCII'] = False
+app.json.ensure_ascii = False
 
 DB = os.path.expanduser("~/mailbox/fake_mail.db")
 TABLE = "fake_mail"
