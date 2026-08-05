@@ -56,7 +56,9 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
-        <a  type="button" class="btn btn-primary" href="/delete_all">Yes</a>
+        <form action="/delete_all" method="post" class="d-inline">
+            <button type="submit" class="btn btn-primary">Yes</button>
+        </form>
       </div>
     </div>
   </div>

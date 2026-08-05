@@ -99,13 +99,13 @@ def search():
         return redirect("/")
 
 
-@app.route('/delete_all', methods=['GET'])
+@app.route('/delete_all', methods=['POST'])
 def delete_all():
     with connect() as conn:
         conn.execute(f"delete from {TABLE}")
     return redirect("/")
 
-@app.route('/delete/<int:id>', methods=['GET'])
+@app.route('/delete/<int:id>', methods=['POST'])
 def delete(id):
     with connect() as conn:
         conn.execute(f"delete from {TABLE} where id = ?", (id,))
@@ -154,4 +154,5 @@ def start_web(host, port):
     app.run(host, port)
 
 if __name__=="__main__":
+    os.makedirs(os.path.dirname(DB), exist_ok=True)
     app.run("127.0.0.1", "9080", debug=True)

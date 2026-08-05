@@ -66,6 +66,7 @@ class DataHandler(object):
 
     def init_db(self):
         print(f"use db {self.db}")
+        os.makedirs(self.maildir, exist_ok=True)
         conn = sqlite3.connect(self.db)
         try:
             sql = f"""
