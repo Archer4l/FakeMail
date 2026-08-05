@@ -10,6 +10,8 @@ app.json.ensure_ascii = False
 
 DB = os.path.expanduser("~/mailbox/fake_mail.db")
 TABLE = "fake_mail"
+PAGE_SIZE = 25
+PAGER_LINKS = 9
 
 @contextmanager
 def connect():
@@ -29,6 +31,11 @@ def to_int(value, default=None):
 def like_escape(term):
     return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
+def page_window(curpage, totalpage, links=PAGER_LINKS):
+    """first and last+1 page number to show in the pager"""
+    start = max(1, min(curpage - links // 2, totalpage - links + 1))
+    return start, min(totalpage, start + links - 1) + 1
+
 def deletemail(id):
     id = to_int(id)
     if id is None:
@@ -38,65 +45,35 @@ def deletemail(id):
 
 @app.route('/', methods=['GET','POST'])
 def index():
-    if request.method == 'POST' and 'deletemail' in request.form:
-       deletemail(request.form["deletemail"])
+    query = request.args.get('q', '').strip()
 
-    curpage=1
-    offset=0
-    limit=12
+    if request.method == 'POST' and 'deletemail' in request.form:
+        deletemail(request.form["deletemail"])
+        return redirect(url_for('index', q=query or None, page=request.args.get('page')))
+
+    where, params = "", []
+    if query:
+        where = "where email_title like ? escape '\\'"
+        params = ["%" + like_escape(query) + "%"]
 
     with connect() as conn:
-        cur = conn.execute(f"select count(*) from {TABLE}")
-        rowcount=int(cur.fetchone()[0])
-        totalpage=(rowcount // limit  )
-        if totalpage*limit < rowcount:
-            totalpage = (rowcount // limit + 1 )
-
-        page = to_int(request.args.get('page'))
-        if page is not None:
-            curpage = page
-            offset = limit * curpage - limit
-
-        if curpage > totalpage:
-            curpage = totalpage
-            offset = limit * curpage - limit
-
-        startpage = curpage - limit//2
-        endpage = curpage + limit//2
-
-        if startpage < 1:
-            startpage = 1
-            endpage=limit+1
-        elif startpage > 1 and totalpage+1-curpage <= limit//2:
-            endpage=totalpage+1
-            startpage=totalpage+1 - limit
-
-        if limit>=totalpage:
-            startpage = 1
-            endpage = totalpage +1
+        rowcount = conn.execute(f"select count(*) from {TABLE} {where}", params).fetchone()[0]
+        totalpage = max(1, -(-rowcount // PAGE_SIZE))
+        curpage = min(max(to_int(request.args.get('page'), 1), 1), totalpage)
+        startpage, endpage = page_window(curpage, totalpage)
 
         sql = f"""
-                select id, email_title, email_from, email_to, dt, has_attach from {TABLE}  order by id desc  LIMIT ? OFFSET ?
+                select id, email_title, email_from, email_to, dt, has_attach from {TABLE} {where} order by id desc limit ? offset ?
             """
-        cur = conn.execute(sql, (limit, offset))
-        val = cur.fetchall()
+        val = conn.execute(sql, params + [PAGE_SIZE, (curpage - 1) * PAGE_SIZE]).fetchall()
 
-    return render_template("index.html", mails=val, curpage=curpage, totalpage=totalpage, startpage=startpage, endpage=endpage)
+    return render_template("index.html", mails=val, query=query, rowcount=rowcount,
+                           curpage=curpage, totalpage=totalpage, startpage=startpage, endpage=endpage)
 
 @app.route('/search', methods=['GET','POST'])
 def search():
-
-    if request.method=='POST' and 'search' in request.form:
-        if 'deletemail' in request.form:
-            deletemail(request.form["deletemail"])
-        search="%"+like_escape(request.form['search'])+"%"
-        sql = f"select id, email_title, email_from, email_to, dt, has_attach from {TABLE}  WHERE email_title LIKE ? ESCAPE '\\' order by id desc limit 500"
-        with connect() as conn:
-            cur = conn.execute(sql, (search,))
-            val = cur.fetchall()
-        return render_template("index.html", mails=val)
-    else:
-        return redirect("/")
+    query = request.form.get('search') or request.args.get('search') or request.args.get('q')
+    return redirect(url_for('index', q=query or None))
 
 
 @app.route('/delete_all', methods=['POST'])
