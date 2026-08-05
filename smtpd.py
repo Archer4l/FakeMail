@@ -17,16 +17,15 @@ class DataHandler(object):
 
     async def save_mail(self, _from, to, email_title, tm, raw_mail, has_attach):
         conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        sql = f"""
-            insert into {self.table_name} (`email_from`, `email_to`, `email_title`,  `dt`, `email_raw`, `has_attach`) values
-            (?, ?, ?, ?,?, ?)
-        """
-        #print(sql)
-        cur.execute(sql, (_from, to, email_title, tm, raw_mail, has_attach))
-        conn.commit()
-        cur.close()
-        conn.close()
+        try:
+            sql = f"""
+                insert into {self.table_name} (`email_from`, `email_to`, `email_title`,  `dt`, `email_raw`, `has_attach`) values
+                (?, ?, ?, ?,?, ?)
+            """
+            conn.execute(sql, (_from, to, email_title, tm, raw_mail, has_attach))
+            conn.commit()
+        finally:
+            conn.close()
 
     async def parse(self, from_,to_, raw_mail):
         mail = mailparser.parse_from_string(raw_mail)
@@ -68,22 +67,22 @@ class DataHandler(object):
     def init_db(self):
         print(f"use db {self.db}")
         conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        sql = f"""
-            create table  if not exists  {self.table_name}(
-            id INTEGER  PRIMARY KEY autoincrement,
-            email_from   VARCHAR(255),
-            email_to  VARCHAR(255),
-            email_title VARCHAR(512),
-            dt TEXT,
-            email_raw TEXT,
-            has_attach INTEGER not null
-            )
-        """
-        cur.execute(sql)
-        conn.commit()
-        cur.close()
-        conn.close()
+        try:
+            sql = f"""
+                create table  if not exists  {self.table_name}(
+                id INTEGER  PRIMARY KEY autoincrement,
+                email_from   VARCHAR(255),
+                email_to  VARCHAR(255),
+                email_title VARCHAR(512),
+                dt TEXT,
+                email_raw TEXT,
+                has_attach INTEGER not null
+                )
+            """
+            conn.execute(sql)
+            conn.commit()
+        finally:
+            conn.close()
 
 
 if __name__=='__main__':
