@@ -18,15 +18,15 @@
         {% if query %}<a class="clear" href="/" title="Clear search">&times;</a>{% endif %}
     </form>
 
-    <button type="button" id="empty-db" class="btn btn-danger">Empty database</button>
+    <a href="#confirm-empty" class="btn btn-danger" id="empty-db">Empty database</a>
 </header>
 
 <main>
     <p class="summary">
         {% if query %}
-            {{ rowcount }} message{{ '' if rowcount == 1 else 's' }} matching <b>{{ query }}</b>
+            {{ rowcount }} messages matching <b>{{ query }}</b>
         {% else %}
-            {{ rowcount }} message{{ '' if rowcount == 1 else 's' }}
+            {{ rowcount }} messages
         {% endif %}
     </p>
 
@@ -93,19 +93,15 @@
     {% endif %}
 </main>
 
-<dialog id="confirm-empty">
-    <h2>Empty database</h2>
-    <p>Delete all {{ rowcount }} stored message{{ '' if rowcount == 1 else 's' }}? This cannot be undone.</p>
-    <div class="dialog-actions">
-        <form method="dialog"><button type="submit" class="btn">Cancel</button></form>
-        <form action="/delete_all" method="post"><button type="submit" class="btn btn-danger">Delete all</button></form>
+<div class="confirm" id="confirm-empty">
+    <div class="confirm-box">
+        <h2>Empty database</h2>
+        <p>Delete all {{ rowcount }} stored messages? This cannot be undone.</p>
+        <div class="confirm-actions">
+            <a href="#" class="btn">Cancel</a>
+            <form action="/delete_all" method="post"><button type="submit" class="btn btn-danger">Delete all</button></form>
+        </div>
     </div>
-</dialog>
-
-<script>
-    document.getElementById('empty-db').addEventListener('click', function () {
-        document.getElementById('confirm-empty').showModal();
-    });
-</script>
+</div>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import sqlite3, os
+import sqlite3,os
 from contextlib import contextmanager
 from flask import abort
 from flask import make_response
@@ -58,7 +58,12 @@ def index():
 
     with connect() as conn:
         rowcount = conn.execute(f"select count(*) from {TABLE} {where}", params).fetchone()[0]
-        totalpage = max(1, -(-rowcount // PAGE_SIZE))
+        totalpage = rowcount // PAGE_SIZE
+        if totalpage * PAGE_SIZE < rowcount:
+            totalpage += 1
+        if totalpage < 1:
+            totalpage = 1
+
         curpage = min(max(to_int(request.args.get('page'), 1), 1), totalpage)
         startpage, endpage = page_window(curpage, totalpage)
 
