@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FakeMail: {{ mail[1] }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="/static/logo.svg">
+    <link rel="stylesheet" href="/static/css/fakemail.css">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" href="/"><img src="/static/logo.svg" width="26" height="26" alt=""> FakeMail</a>
+    <a class="btn" href="/">Back to list</a>
+    <div class="actions">
+        <a class="btn" target="_blank" href="/raw_mail/{{ mail[0] }}">RAW</a>
+        <a class="btn" target="_blank" href="/email/{{ mail[3] }}">JSON</a>
+        <form action="/delete/{{ mail[0] }}" method="post">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</header>
+
+<main>
+    <h1 class="subject">{{ mail[1] }}</h1>
+
+    <table class="headers">
+        {% for name, value in headers %}
+        <tr><th>{{ name }}</th><td>{{ value }}</td></tr>
+        {% endfor %}
+        <tr><th>Received</th><td>{{ mail[4] }}</td></tr>
+    </table>
+
+    {% if attachments %}
+    <h2>Attachments</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr><th>File</th><th>Type</th><th>Size</th><th class="col-act"></th></tr>
+            </thead>
+            <tbody>
+            {% for a in attachments %}
+            <tr>
+                <td class="subject">{{ a['name'] }}</td>
+                <td class="addr">{{ a['type'] }}</td>
+                <td class="col-dt">{{ a['size'] }}</td>
+                <td class="col-act">
+                    <div class="actions">
+                        <a class="btn" href="/message/{{ mail[0] }}/attachment/{{ a['idx'] }}">Download</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if plain %}
+    <h2>Text</h2>
+    <pre class="body">{{ plain }}</pre>
+    {% endif %}
+
+    {% if has_html %}
+    <h2>HTML</h2>
+    <iframe class="body-html" src="/message/{{ mail[0] }}/html" sandbox="" title="HTML part"></iframe>
+    {% endif %}
+
+    {% if not plain and not has_html %}
+    <div class="empty">This message has no text or html part. Download the RAW copy to inspect it.</div>
+    {% endif %}
+</main>
+</body>
+</html>

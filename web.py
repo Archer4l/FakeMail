@@ -1,5 +1,6 @@
 import sqlite3,os
 from contextlib import contextmanager
+from email import message_from_bytes, policy
 from flask import abort
 from flask import make_response
 from flask import Flask, jsonify, redirect, url_for, request
@@ -39,6 +40,38 @@ def raw_bytes(value):
 
 def raw_text(value):
     return value if isinstance(value, str) else value.decode('utf8', 'replace')
+
+def load_message(email_id):
+    sql = f"select id, email_title, email_from, email_to, dt, email_raw from {TABLE} where id=?"
+    with connect() as conn:
+        cur = conn.execute(sql, (email_id,))
+        val = cur.fetchone()
+    if val is None:
+        abort(404)
+    raw = raw_bytes(val[5])
+    try:
+        return val, message_from_bytes(raw, policy=policy.default)
+    except Exception:
+        return val, None
+
+def part_text(part):
+    try:
+        return part.get_content()
+    except Exception as err:
+        return f"[cannot decode this part: {err}]"
+
+def part_size(part):
+    payload = part.get_payload(decode=True) or b""
+    size = len(payload)
+    for unit in ("B", "KB", "MB"):
+        if size < 1024 or unit == "MB":
+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
+        size = size / 1024
+
+def attachment_name(part, idx):
+    name = os.path.basename(part.get_filename() or "")
+    name = "".join(c for c in name if c.isprintable() and c not in '"\\/')
+    return name or f"part{idx}"
 
 def page_window(curpage, totalpage, links=PAGER_LINKS):
     """first and last+1 page number to show in the pager"""
@@ -101,6 +134,54 @@ def delete(id):
     with connect() as conn:
         conn.execute(f"delete from {TABLE} where id = ?", (id,))
     return redirect("/")
+
+
+@app.route('/message/<int:email_id>', methods=['GET'])
+def message(email_id):
+    val, msg = load_message(email_id)
+    if msg is None:
+        return render_template("message.html", mail=val, headers=[], plain=raw_text(val[5]),
+                               has_html=False, attachments=[])
+
+    headers = [(name, msg[name]) for name in ('From', 'To', 'Cc', 'Subject', 'Date') if msg[name]]
+    plain = msg.get_body(preferencelist=('plain',))
+    attachments = [{'idx': i, 'name': attachment_name(part, i),
+                    'type': part.get_content_type(), 'size': part_size(part)}
+                   for i, part in enumerate(msg.iter_attachments())]
+
+    return render_template("message.html", mail=val, headers=headers,
+                           plain=part_text(plain) if plain else None,
+                           has_html=msg.get_body(preferencelist=('html',)) is not None,
+                           attachments=attachments)
+
+
+@app.route('/message/<int:email_id>/html', methods=['GET'])
+def message_html(email_id):
+    val, msg = load_message(email_id)
+    part = msg.get_body(preferencelist=('html',)) if msg else None
+    if part is None:
+        abort(404)
+    response = make_response(part_text(part))
+    response.headers.set('Content-Type', 'text/html; charset=utf-8')
+    # opaque origin, no network, no scripts: mail bodies are untrusted input
+    response.headers.set('Content-Security-Policy',
+                         "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'")
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    return response
+
+
+@app.route('/message/<int:email_id>/attachment/<int:idx>', methods=['GET'])
+def attachment(email_id, idx):
+    val, msg = load_message(email_id)
+    parts = list(msg.iter_attachments()) if msg else []
+    if idx >= len(parts):
+        abort(404)
+    response = make_response(parts[idx].get_payload(decode=True) or b"")
+    response.headers.set('Content-Type', 'application/octet-stream')
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    response.headers.set('Content-Disposition', 'attachment',
+                         filename=attachment_name(parts[idx], idx))
+    return response
 
 
 @app.route('/email/<path:email>', methods=['GET'])
