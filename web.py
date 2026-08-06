@@ -31,6 +31,12 @@ def to_int(value, default=None):
 def like_escape(term):
     return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
+def raw_bytes(value):
+    return value if isinstance(value, bytes) else value.encode('utf8', 'replace')
+
+def raw_text(value):
+    return value if isinstance(value, str) else value.decode('utf8', 'replace')
+
 def page_window(curpage, totalpage, links=PAGER_LINKS):
     """first and last+1 page number to show in the pager"""
     start = max(1, min(curpage - links // 2, totalpage - links + 1))
@@ -108,7 +114,7 @@ def email(email):
         val = cur.fetchone()
     if val is None:
         abort(404)
-    raw_email = val[2]
+    raw_email = raw_text(val[2])
     result = {}
     result['id'] = val[0]
     result['from'] = val[3]
@@ -127,7 +133,7 @@ def raw_mail(email_id):
         val = cur.fetchone()
     if val is None:
         abort(404)
-    response = make_response(val[0])
+    response = make_response(raw_bytes(val[0]))
     response.headers.set('Content-Type', 'message/rfc822')
     response.headers.set('Content-Disposition', 'attachment', filename='%s.eml' % email_id)
     return response

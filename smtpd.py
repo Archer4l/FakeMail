@@ -28,7 +28,7 @@ class DataHandler(object):
             conn.close()
 
     async def parse(self, from_,to_, raw_mail):
-        mail = mailparser.parse_from_string(raw_mail)
+        mail = mailparser.parse_from_bytes(raw_mail)
         email_subject = mail.subject
         has_attach = 1 if len(mail.attachments)>0 else 0
         tm = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -43,8 +43,7 @@ class DataHandler(object):
          from_ = envelope.mail_from
          to_ = envelope.rcpt_tos
 
-         s = envelope.content.decode('utf8', errors='replace')
-         await self.parse(from_, to_, s)
+         await self.parse(from_, to_, envelope.content)
          return '250 Message accepted for delivery'
 
     async def handle_RCPT(self, server, session, envelope, address, rcpt_options):
@@ -76,7 +75,7 @@ class DataHandler(object):
                 email_to  VARCHAR(255),
                 email_title VARCHAR(512),
                 dt TEXT,
-                email_raw TEXT,
+                email_raw BLOB,
                 has_attach INTEGER not null
                 )
             """
