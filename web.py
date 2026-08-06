@@ -8,8 +8,11 @@ from flask import render_template
 app = Flask(__name__)
 app.json.ensure_ascii = False
 
-DB = os.path.expanduser("~/mailbox/fake_mail.db")
+MAILBOX = os.path.expanduser(os.environ.get('FAKEMAIL_DIR', "~/mailbox"))
+DB = os.path.join(MAILBOX, "fake_mail.db")
 TABLE = "fake_mail"
+WEB_HOST = os.environ.get('FAKEMAIL_WEB_HOST', "127.0.0.1")
+WEB_PORT = int(os.environ.get('FAKEMAIL_WEB_PORT', 9080))
 PAGE_SIZE = 25
 PAGER_LINKS = 9
 
@@ -142,5 +145,5 @@ def start_web(host, port):
     app.run(host, port)
 
 if __name__=="__main__":
-    os.makedirs(os.path.dirname(DB), exist_ok=True)
-    app.run("127.0.0.1", "9080", debug=True)
+    os.makedirs(MAILBOX, exist_ok=True)
+    app.run(WEB_HOST, WEB_PORT, debug=True)

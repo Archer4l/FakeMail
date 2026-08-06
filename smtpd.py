@@ -3,7 +3,10 @@ import sqlite3
 from aiosmtpd.controller import Controller
 import os
 from datetime import datetime
-from web import start_web
+from web import start_web, MAILBOX, WEB_HOST, WEB_PORT
+
+SMTP_HOST = os.environ.get('FAKEMAIL_SMTP_HOST', "127.0.0.1")
+SMTP_PORT = int(os.environ.get('FAKEMAIL_SMTP_PORT', 25))
 
 
 class DataHandler(object):
@@ -88,9 +91,9 @@ class DataHandler(object):
 if __name__=='__main__':
 
     try:
-        controller = Controller(DataHandler("~/mailbox", 'fake_mail.db', "fake_mail"), hostname='127.0.0.1', port=25)
+        controller = Controller(DataHandler(MAILBOX, 'fake_mail.db', "fake_mail"), hostname=SMTP_HOST, port=SMTP_PORT)
         controller.start()
 
-        start_web("127.0.0.1", "9080")
+        start_web(WEB_HOST, WEB_PORT)
     except KeyboardInterrupt:
         print("smtpd quit!")
